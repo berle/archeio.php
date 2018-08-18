@@ -2,7 +2,7 @@
 
 namespace Berle\Archeio;
 
-class InvalidResourceException extends \Exception
+class InvalidQueryException extends \Exception
 {
     //
 }
