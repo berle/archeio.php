@@ -50,24 +50,14 @@ class QueryTest extends TestCase
         $this->assertSame($this->query->getLimit(), 42);
     }
     
-    public function testAllQuery()
+    public function testQuery()
     {
         $this->source
             ->expects($this->once())
-            ->method('queryAll')
-            ->with($this->identicalTo($this->query));
+            ->method('query')
+            ->with($this->identicalTo($this->query), 'all');
 
         $this->query->all();
-    }
-    
-    public function testFirstQuery()
-    {
-        $this->source
-            ->expects($this->once())
-            ->method('queryFirst')
-            ->with($this->identicalTo($this->query));
-
-        $this->query->first();
     }
     
 }

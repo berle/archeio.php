@@ -2,6 +2,8 @@
 
 namespace Berle\Archeio;
 
+use MJS\TopSort\Implementations\StringSort;
+
 class Repository implements RepositoryInterface
 {
     
@@ -51,76 +53,57 @@ class Repository implements RepositoryInterface
     
     protected function flushStore(WorkInterface $work): void
     {
-        $sorter = new GroupedStringSort();
+        $resources = $work->getStored();
         
-        $dependency_map = $this->getStoreDependencies();
-        
-        foreach ($work->getStoreList() as $resource) {
-            $class = get_class($resource);
-            $sorter->add($resource, $class, $dependency_map[ $class ]);
-        }
-        
-        $sorted = $sorter->sort();
-        $groups = $sorter->getGroups();
-        
-        foreach ($groups as $group) {
-            $this
-                ->getSource($group->name)
-                ->performStoreWork(array_slice($results, $group->position, $group->length));
+        foreach ($this->getStoreOrder() as $type) {
+            if (array_key_exists($type, $resources)) {
+                $this->getSource($type)->store($resources[ $type ]);
+            }
         }
     }
-
-    protected function getStoreDependencies()
+    
+    protected function getStoreOrder()
     {
-        if (isset($this->store_dependencies)) {
-            return $this->store_dependencies;
+        if (isset($this->store_order)) {
+            return $this->store_order;
         }
 
-        $dependency_map = [];
+        $sorter = new StringSort();
         
         foreach ($this->sources as $type => $source) {
-            $dependency_map[ $type ] = $source->getStoreDependencies();
+            $sorter->add($type, $source->getStoreDependencies());
         }
         
-        return $this->store_dependencies = $dependency_map;
+        return $this->store_order = $sorter->sort();
     }
 
     protected function flushRemove(WorkInterface $work): void
     {
-        $sorter = new GroupedStringSort();
+        $resources = $work->getRemoved();
         
-        $dependency_map = $this->getRemoveDependencies();
-        
-        foreach ($work->getRemoveList() as $resource) {
-            $sorter->add($resource, $resource->class, $dependency_map[ $resource->class ]);
-        }
-        
-        $sorted = $sorter->sort();
-        $groups = $sorter->getGroups();
-        
-        foreach ($groups as $group) {
-            $this
-                ->getSource($group->name)
-                ->performRemoveWork(array_slice($results, $group->position, $group->length));
+        foreach ($this->getRemoveOrder() as $type) {
+            if (array_key_exists($type, $resources)) {
+                $this->getSource($type)->store($resources[ $type ]);
+            }
         }
     }
 
-    protected function getRemoveDependencies()
+    protected function getRemoveOrder()
     {
-        if (isset($this->remove_dependencies)) {
-            return $this->remove_dependencies;
+        if (isset($this->remove_order)) {
+            return $this->remove_order;
         }
 
-        $dependency_map = [];
+        $sorter = new StringSort();
         
         foreach ($this->sources as $type => $source) {
-            $dependency_map[ $type ] = $source->getRemoveDependencies();
+            $sorter->add($type, $source->getRemoveDependencies());
         }
         
-        return $this->remove_dependencies = $dependency_map;
+        return $this->remove_order = $sorter->sort();
     }
     
-    protected function wrapFlush(WorkInterface $work, Closure $callback): void
+    protected function wrapFlush(\Closure $callback): void
     {
         $callback();
     }

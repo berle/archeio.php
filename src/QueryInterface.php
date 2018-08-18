@@ -10,8 +10,11 @@ interface QueryInterface
     public function filter(array $filter): QueryInterface;
     public function page(int $page): QueryInterface;
     public function limit(int $limit): QueryInterface;
-    
-    public function first();
-    public function all();
+
+    public function getType(): string;
+    public function getFilter(): array;
+    public function getPage(): int;
+    public function hasLimit(): bool;
+    public function getLimit(): ?int;
     
 }

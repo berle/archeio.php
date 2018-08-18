@@ -61,7 +61,7 @@ class Query implements QueryInterface
         return $this;
     }
     
-    public function hasLimit()
+    public function hasLimit(): bool
     {
         if (isset($this->limit)) {
             return true;
@@ -70,19 +70,14 @@ class Query implements QueryInterface
         return false;
     }
     
-    public function getLimit()
+    public function getLimit(): ?int
     {
         return $this->limit;
     }
 
-    public function all()
+    public function __call($method, array $args)
     {
-        return $this->getSource()->queryAll($this);
-    }
-    
-    public function first()
-    {
-        return $this->getSource()->queryFirst($this);
+        return $this->getSource()->query($this, $method, $args);
     }
     
     protected function getSource()

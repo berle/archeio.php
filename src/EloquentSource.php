@@ -8,6 +8,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 abstract class EloquentSource implements SourceInterface
 {
+    use QueryDispatchTrait;
     
     protected $store_dependencies = [];
     protected $remove_dependencies = [];

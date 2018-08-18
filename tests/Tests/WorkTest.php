@@ -28,7 +28,7 @@ class WorkTest extends TestCase
     {
         $this->alwaysValid();
         $stored = $this->populateStore();
-        $this->assertSame($this->work->getStoreList(), [ $stored ]);
+        $this->assertSame($this->work->getStored(), [ 'stdClass' => [ $stored ] ]);
     }
 
     public function testRemoveException()
@@ -41,7 +41,7 @@ class WorkTest extends TestCase
     {
         $this->alwaysValid();
         $removed = $this->populateRemove();
-        $this->assertSame($this->work->getRemoveList(), [ $removed ]);
+        $this->assertSame($this->work->getRemoved(), [ 'stdClass' => [ $removed ] ]);
     }
     
     public function testEmpty()
@@ -49,11 +49,11 @@ class WorkTest extends TestCase
         $this->alwaysValid();
         $stored = $this->populateStore();
         $removed = $this->populateRemove();
-        $this->assertSame($this->work->getStoreList(), [ $stored ]);
-        $this->assertSame($this->work->getRemoveList(), [ $removed ]);
+        $this->assertSame($this->work->getStored(), [ 'stdClass' => [ $stored ] ]);
+        $this->assertSame($this->work->getRemoved(), [ 'stdClass' => [ $removed ] ]);
         $this->work->empty();
-        $this->assertSame($this->work->getStoreList(), []);
-        $this->assertSame($this->work->getRemoveList(), []);
+        $this->assertSame($this->work->getStored(), []);
+        $this->assertSame($this->work->getRemoved(), []);
     }
     
     public function testFlush()

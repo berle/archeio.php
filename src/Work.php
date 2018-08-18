@@ -5,8 +5,8 @@ namespace Berle\Archeio;
 class Work implements WorkInterface
 {
     
-    protected $store_list = [];
-    protected $remove_list = [];
+    protected $stored = [];
+    protected $removed = [];
 
     public function __construct(
         RepositoryInterface $repository
@@ -16,26 +16,26 @@ class Work implements WorkInterface
     
     public function store($resource): WorkInterface
     {
-        $this->assertValidResource($resource);
+        $type = $this->assertValidResource($resource);
         
-        $this->store_list[] = $resource;
+        $this->stored[ $type ][] = $resource;
         
         return $this;
     }
     
     public function remove($resource): WorkInterface
     {
-        $this->assertValidResource($resource);
+        $type = $this->assertValidResource($resource);
         
-        $this->remove_list[] = $resource;
+        $this->removed[ $type ][] = $resource;
         
         return $this;
     }
     
     public function empty(): WorkInterface
     {
-        $this->store_list = [];
-        $this->remove_list = [];
+        $this->stored = [];
+        $this->removed = [];
         
         return $this;
     }
@@ -47,10 +47,14 @@ class Work implements WorkInterface
         return $this;
     }
     
-    protected function assertValidResource($resource)
+    protected function assertValidResource($resource): string
     {
-        if (is_object($resource) && $this->repository->hasSource(get_class($resource))) {
-            return true;
+        if (is_object($resource)) {
+            $type = get_class($resource);
+            
+            if ($this->repository->hasSource($type)) {
+                return $type;
+            }
         }
         
         throw new InvalidResourceException();
@@ -58,21 +62,21 @@ class Work implements WorkInterface
     
     public function hasWork(): bool
     {
-        if (count($this->store_list) > 0 || count($this->remove_list) > 0) {
+        if (count($this->stored) > 0 || count($this->removed) > 0) {
             return true;
         }
         
         return false;
     }
     
-    public function getStoreList(): array
+    public function getStored(): array
     {
-        return $this->store_list;
+        return $this->stored;
     }
     
-    public function getRemoveList(): array
+    public function getRemoved(): array
     {
-        return $this->remove_list;
+        return $this->removed;
     }
     
 }

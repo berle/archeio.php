@@ -13,7 +13,7 @@ interface WorkInterface
     public function empty(): WorkInterface;
     
     public function hasWork(): bool;
-    public function getStoreList(): array;
-    public function getRemoveList(): array;
+    public function getStored(): array;
+    public function getRemoved(): array;
 
 }
