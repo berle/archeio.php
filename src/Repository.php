@@ -8,8 +8,7 @@ class Repository implements RepositoryInterface
 {
     
     protected $sources = [];
-    protected $store_dependencies;
-    protected $remove_dependencies;
+    protected $dependency_order;
 
     public function register(SourceInterface $source): void
     {
@@ -17,14 +16,12 @@ class Repository implements RepositoryInterface
             $this->sources[ $type ] = $source;
         }
 
-        unset($this->store_dependencies);
-        unset($this->remove_dependencies);
+        unset($this->dependency_order);
     }
     
     public function query(string $type): QueryInterface
     {
         $this->assertValidType($type);
-        
         $query_class = $this->getQueryClass();
         
         return new $query_class($this, $type);
@@ -42,67 +39,51 @@ class Repository implements RepositoryInterface
         if ($work->hasWork()) {
             $this->wrapFlush(function () use ($work)
             {
-                $this->flushStore($work);
-    
-                $this->flushRemove($work);
+                $this->processResources(
+                    $work->getStored(),
+                    $this->getDependencyOrder(),
+                    function (SourceInterface $source, array $resources)
+                    {
+                        $source->store($resources);
+                    });
+                
+                $this->processResources(
+                    $work->getRemoved(),
+                    array_reverse($this->getDependencyOrder()),
+                    function (SourceInterface $source, array $resources)
+                    {
+                        $source->remove($resources);
+                    });
             });
 
             $work->empty();
         }
     }
     
-    protected function flushStore(WorkInterface $work): void
+    protected function processResources(array $resources, array $type_order, \Closure $callback)
     {
-        $resources = $work->getStored();
-        
-        foreach ($this->getStoreOrder() as $type) {
+        foreach ($type_order as $type) {
             if (array_key_exists($type, $resources)) {
-                $this->getSource($type)->store($resources[ $type ]);
-            }
-        }
-    }
-    
-    protected function getStoreOrder()
-    {
-        if (isset($this->store_order)) {
-            return $this->store_order;
-        }
-
-        $sorter = new StringSort();
-        
-        foreach ($this->sources as $type => $source) {
-            $sorter->add($type, $source->getStoreDependencies());
-        }
-        
-        return $this->store_order = $sorter->sort();
-    }
-
-    protected function flushRemove(WorkInterface $work): void
-    {
-        $resources = $work->getRemoved();
-        
-        foreach ($this->getRemoveOrder() as $type) {
-            if (array_key_exists($type, $resources)) {
-                $this->getSource($type)->store($resources[ $type ]);
+                $callback($this->getSource($type), $resources[ $type ]);
             }
         }
     }
 
-    protected function getRemoveOrder()
+    protected function getDependencyOrder(): array
     {
-        if (isset($this->remove_order)) {
-            return $this->remove_order;
+        if (isset($this->dependency_order)) {
+            return $this->dependency_order;
         }
-
+        
         $sorter = new StringSort();
         
         foreach ($this->sources as $type => $source) {
-            $sorter->add($type, $source->getRemoveDependencies());
+            $sorter->add($type, $source->dependencies());
         }
         
-        return $this->remove_order = $sorter->sort();
+        return $this->dependency_order = $sorter->sort();
     }
-    
+
     protected function wrapFlush(\Closure $callback): void
     {
         $callback();

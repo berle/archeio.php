@@ -10,8 +10,7 @@ abstract class EloquentSource implements SourceInterface
 {
     use QueryDispatchTrait;
     
-    protected $store_dependencies = [];
-    protected $remove_dependencies = [];
+    protected $dependencies = [];
     protected $filter = [];
     protected $searchable = [
         'id' => 'id',
@@ -38,14 +37,9 @@ abstract class EloquentSource implements SourceInterface
         }
     }
     
-    public function getStoreDependencies(): array
+    public function dependencies(): array
     {
-        return $this->store_dependencies;
-    }
-    
-    public function getRemoveDependencies(): array
-    {
-        return $this->remove_dependencies;
+        return $this->dependencies;
     }
 
     public function queryAll(QueryInterface $query)
