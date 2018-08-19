@@ -7,7 +7,7 @@ trait QueryDispatchTrait
     
     public function query(QueryInterface $query, string $method, array $args = [])
     {
-        $full_method = "query" . ucFirst($method);
+        $full_method = "query" . ucfirst($method);
         
         if (method_exists($this, $full_method)) {
             return $this->{ $full_method }($query, $args);
