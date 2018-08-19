@@ -27,11 +27,13 @@ class QueryTest extends TestCase
     
     public function testFilter()
     {
-        $this->assertSame($this->query->getFilter(), []);
+        $this->assertSame($this->query->getFilters(), []);
         $this->query->filter([ 'foo' => 'bar' ]);
-        $this->assertSame($this->query->getFilter(), [ 'foo' => 'bar' ]);
+        $this->assertTrue($this->query->hasFilter('foo'));
+        $this->assertSame($this->query->getFilter('foo'), 'bar');
+        $this->assertSame($this->query->getFilters(), [ 'foo' => 'bar' ]);
         $this->query->filter([ 'hello' => 'world' ]);
-        $this->assertSame($this->query->getFilter(), [ 'foo' => 'bar', 'hello' => 'world' ]);
+        $this->assertSame($this->query->getFilters(), [ 'foo' => 'bar', 'hello' => 'world' ]);
     }
     
     public function testPage()

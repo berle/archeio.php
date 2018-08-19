@@ -31,7 +31,21 @@ class Query implements QueryInterface
         return $this;
     }
     
-    public function getFilter(): array
+    public function hasFilter(string $key): bool
+    {
+        return array_key_exists($key, $this->filter);
+    }
+    
+    public function getFilter(string $key)
+    {
+        if ($this->hasFilter($key)) {
+            return $this->filter[ $key ];
+        }
+        
+        return null;
+    }
+    
+    public function getFilters(): array
     {
         return $this->filter;
     }

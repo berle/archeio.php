@@ -12,7 +12,9 @@ interface QueryInterface
     public function limit(int $limit): QueryInterface;
 
     public function getType(): string;
-    public function getFilter(): array;
+    public function hasFilter(string $key): bool;
+    public function getFilter(string $key);
+    public function getFilters(): array;
     public function getPage(): int;
     public function hasLimit(): bool;
     public function getLimit(): ?int;
