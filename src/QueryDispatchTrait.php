@@ -13,7 +13,7 @@ trait QueryDispatchTrait
             return $this->{ $full_method }($query, $args);
         }
         
-        return InvalidQueryException("Query ($method) not supported by this source");
+        throw new UnsupportedException("Query ($method) not supported by this source");
     }
 
     
