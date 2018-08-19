@@ -13,7 +13,9 @@ trait QueryDispatchTrait
             return $this->{ $full_method }($query, $args);
         }
         
-        throw new UnsupportedException("Query ($method) not supported by this source");
+        $class = get_class($this);
+        
+        throw new UnsupportedException("Query ($method) not supported by source ($class)");
     }
 
     
