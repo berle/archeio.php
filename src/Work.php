@@ -7,6 +7,7 @@ class Work implements WorkInterface
     
     protected $stored = [];
     protected $removed = [];
+    protected $count = 0;
 
     public function __construct(
         RepositoryInterface $repository
@@ -19,6 +20,7 @@ class Work implements WorkInterface
         $type = $this->assertValidResource($resource);
         
         $this->stored[ $type ][] = $resource;
+        $this->count++;
         
         return $this;
     }
@@ -28,23 +30,32 @@ class Work implements WorkInterface
         $type = $this->assertValidResource($resource);
         
         $this->removed[ $type ][] = $resource;
+        $this->count++;
         
         return $this;
     }
     
-    public function empty(): WorkInterface
+    protected function count(): int
     {
+        return $this->count;
+    }
+    
+    public function empty(): int
+    {
+        $count = $this->count();
         $this->stored = [];
         $this->removed = [];
+        $this->count = 0;
         
-        return $this;
+        return $count;
     }
     
-    public function flush(): WorkInterface
+    public function flush(): int
     {
+        $count =  $this->count();
         $this->repository->flush($this);
         
-        return $this;
+        return $count;
     }
     
     protected function assertValidResource($resource): string

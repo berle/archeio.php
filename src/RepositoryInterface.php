@@ -13,6 +13,6 @@ interface RepositoryInterface
     // internal use
     public function hasSource(string $type): bool;
     public function getSource(string $type): SourceInterface;
-    public function flush(WorkInterface $work): void;
+    public function flush(WorkInterface $work): int;
 
 }

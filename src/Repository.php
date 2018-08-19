@@ -34,7 +34,7 @@ class Repository implements RepositoryInterface
         return new $work_class($this);
     }
     
-    public function flush(WorkInterface $work): void
+    public function flush(WorkInterface $work): int
     {
         if ($work->hasWork()) {
             $this->wrapFlush(function () use ($work)
@@ -56,8 +56,10 @@ class Repository implements RepositoryInterface
                     });
             });
 
-            $work->empty();
+            return $work->empty();
         }
+        
+        return 0;
     }
     
     protected function processResources(array $resources, array $type_order, \Closure $callback)
