@@ -9,6 +9,9 @@ interface SourceInterface
     public function dependencies(): array;
     public function store(array $resources): void;
     public function remove(array $resources): void;
-    public function query(QueryInterface $query, string $method, array $args = []);
 
+    public function pageQuery(QueryInterface $query, int $page, int $size);
+    public function iterateQuery(QueryInterface $query, \Closure $callback);
+    public function allQuery(QueryInterface $query);
+    public function getQuery(QueryInterface $query, $id);
 }

@@ -36,30 +36,64 @@ class QueryTest extends TestCase
         $this->assertSame($this->query->getFilters(), [ 'foo' => 'bar', 'hello' => 'world' ]);
     }
     
-    public function testPage()
+    public function testOffset()
     {
-        $this->assertSame($this->query->getPage(), 1);
-        $this->query->page(42);
-        $this->assertSame($this->query->getPage(), 42);
+        $this->assertSame($this->query->getOffset(), 0);
+        $this->assertSame($this->query->hasOffset(), false);
+        $this->query->offset(42);
+        $this->assertSame($this->query->hasOffset(), true);
+        $this->assertSame($this->query->getOffset(), 42);
     }
     
     public function testLimit()
     {
-        $this->assertSame($this->query->getLimit(), null);
+        $this->assertSame($this->query->getLimit(), 1);
         $this->assertSame($this->query->hasLimit(), false);
         $this->query->limit(42);
         $this->assertSame($this->query->hasLimit(), true);
         $this->assertSame($this->query->getLimit(), 42);
     }
     
-    public function testQuery()
+    public function testPageQuery()
     {
         $this->source
             ->expects($this->once())
-            ->method('query')
-            ->with($this->identicalTo($this->query), 'all');
+            ->method('pageQuery')
+            ->with($this->identicalTo($this->query), 42, 84);
+
+        $this->query->page(42, 84);
+    }
+
+    public function testAllQuery()
+    {
+        $this->source
+            ->expects($this->once())
+            ->method('allQuery')
+            ->with($this->identicalTo($this->query));
 
         $this->query->all();
     }
     
+    public function testIterateQuery()
+    {
+        $callback = function () {};
+        
+        $this->source
+            ->expects($this->once())
+            ->method('iterateQuery')
+            ->with($this->identicalTo($this->query), $this->identicalTo($callback));
+
+        $this->query->iterate($callback);
+    }
+
+    public function testGetQuery()
+    {
+        $this->source
+            ->expects($this->once())
+            ->method('getQuery')
+            ->with($this->identicalTo($this->query), 42);
+
+        $this->query->get(42);
+    }
+
 }

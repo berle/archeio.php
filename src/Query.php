@@ -8,7 +8,7 @@ class Query implements QueryInterface
     protected $repository;
     protected $type;
     protected $filter = [];
-    protected $page = 1;
+    protected $offset;
     protected $limit;
 
     public function __construct(
@@ -50,25 +50,32 @@ class Query implements QueryInterface
         return $this->filter;
     }
     
-    public function page(int $page): QueryInterface
+    public function offset(int $offset): QueryInterface
     {
-        if ($page >= 1) {
-            $this->page = $page;
+        if ($offset >= 0) {
+            $this->offset = $offset;
         }
         
         return $this;
     }
     
-    public function getPage(): int
+    public function hasOffset(): bool
     {
-        return $this->page;
+        if (isset($this->offset)) {
+            return true;
+        }
+        
+        return false;
     }
     
-    public function limit(?int $limit): QueryInterface
+    public function getOffset(): int
     {
-        if (is_null($limit)) {
-            unset($this->limit);
-        } elseif ($limit >= 1) {
+        return $this->offset ?: 0;
+    }
+    
+    public function limit(int $limit): QueryInterface
+    {
+        if ($limit >= 1) {
             $this->limit = $limit;
         }
         
@@ -84,14 +91,29 @@ class Query implements QueryInterface
         return false;
     }
     
-    public function getLimit(): ?int
+    public function getLimit(): int
     {
-        return $this->limit;
+        return $this->limit ?: 1;
     }
 
-    public function __call($method, array $args)
+    public function page(int $page, ?int $size)
     {
-        return $this->getSource()->query($this, $method, $args);
+        return $this->getSource()->pageQuery($this, $page, $size);
+    }
+    
+    public function iterate(\Closure $callback)
+    {
+        return $this->getSource()->iterateQuery($this, $callback);
+    }
+    
+    public function all()
+    {
+        return $this->getSource()->allQuery($this);
+    }
+    
+    public function get($id)
+    {
+        return $this->getSource()->getQuery($this, $id);
     }
     
     protected function getSource()
