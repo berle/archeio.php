@@ -19,7 +19,7 @@ abstract class AbstractSource implements SourceInterface
         return [];
     }
     
-    public function pageQuery(QueryInterface $query, int $page, $size): CollectionInterface
+    public function pageQuery(QueryInterface $query, int $page, int $size): CollectionInterface
     {
         $items = $this->allQuery($query);
         
