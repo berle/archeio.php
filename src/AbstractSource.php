@@ -38,7 +38,7 @@ abstract class AbstractSource implements SourceInterface
 
     protected function collection(array $items): CollectionInterface
     {
-        return new Collection($data);
+        return new Collection($items);
     }
     
 }
