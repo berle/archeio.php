@@ -11,12 +11,19 @@ abstract class AbstractSource implements SourceInterface
     abstract public function store(array $resources): void;
     abstract public function remove(array $resources): void;
     
-    abstract public function pageQuery(QueryInterface $query, int $page, int $size): CollectionInterface
     abstract public function allQuery(QueryInterface $query): CollectionInterface;
+    abstract public function getQuery(QueryInterface $query, $id);
 
     public function dependencies(): array
     {
         return [];
+    }
+    
+    public function pageQuery(QueryInterface $query, int $page, $size): CollectionInterface
+    {
+        $items = $this->allQuery($query);
+        
+        return array_slice($items, $size * ($page - 1), $size);
     }
 
     public function eachQuery(QueryInterface $query, \Closure $callback): void
@@ -33,5 +40,5 @@ abstract class AbstractSource implements SourceInterface
     {
         return new Collection($data);
     }
-
+    
 }
