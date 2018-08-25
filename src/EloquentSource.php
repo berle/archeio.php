@@ -36,7 +36,7 @@ abstract class EloquentSource extends AbstractSource
         }
     }
     
-    public function pageQuery(QueryInterface $query, int $page, int $size): array
+    public function pageQuery(QueryInterface $query, int $page, int $size): CollectionInterface
     {
         $dbq = $this->buildDbQuery($query->getFilters());
 
