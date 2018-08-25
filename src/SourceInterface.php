@@ -11,7 +11,7 @@ interface SourceInterface
     public function remove(array $resources): void;
 
     public function pageQuery(QueryInterface $query, int $page, int $size);
-    public function iterateQuery(QueryInterface $query, \Closure $callback);
+    public function eachQuery(QueryInterface $query, \Closure $callback);
     public function allQuery(QueryInterface $query);
     public function getQuery(QueryInterface $query, $id);
 }

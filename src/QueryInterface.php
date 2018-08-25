@@ -20,8 +20,8 @@ interface QueryInterface
     public function hasLimit(): bool;
     public function getLimit(): int;
     
-    public function page(int $page, ?int $size);
-    public function iterate(\Closure $callback);
+    public function page(int $page, int $size);
+    public function each(\Closure $callback);
     public function all();
     public function get($id);
 

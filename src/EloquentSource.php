@@ -12,9 +12,11 @@ abstract class EloquentSource implements SourceInterface
     
     protected $dependencies = [];
     protected $filter = [];
+    protected $id_key = 'id';
     protected $searchable = [
         'id' => 'id',
     ];
+    protected $iterator_batch_size = 500;
 
     abstract protected function model(): string;
 
@@ -42,36 +44,99 @@ abstract class EloquentSource implements SourceInterface
         return $this->dependencies;
     }
 
-    public function queryAll(QueryInterface $query)
+    public function pageQuery(QueryInterface $query, int $page, int $size)
     {
         $dbq = $this->buildDbQuery($query->getFilter());
 
-        $page = 1;
+        $total = $dbq->count();
+        $dbq->take($this->calcPageLimit($query, $page, $size));
+        $dbq->skip($this->calcPageOffset($query, $page, $size));
+        $results = $dbq->get();
 
-        if ($limit = $query->getLimit()) {
-            $total = $dbq->count();
-            $page = $query->getPage();
-            $dbq->take($limit);
-            $dbq->skip(($page - 1) * $limit);
+        return new LengthAwarePaginator($results, $total, $size, $page);
+    }
+    
+    protected function calcPageOffset(QueryInterface $query, int $page, int $size): int
+    {
+        return $query->getOffset() + (($page - 1) * $size);
+    }
+    
+    protected function calcPageLimit(QueryInterface $query, int $page, int $size): int
+    {
+        if (! $query->hasLimit()) {
+            // We have no limit, therefor we can always use the full pagesize as limit.
+            return $size;
+        }
+        
+        $last_offset = $query->getOffset() + $query->getLimit();
+        $page_offset = $this->calcPageOffset($query, $page, $size);
+        
+        if (($page_offset + $size) > $last_offset) {
+            $new_size = $last_offset - $page_offset;
+            
+            if ($new_size > 0) {
+                return $new_size;
+            } else {
+                return 0;
+            }
+        }
+        
+        return $size;
+    }
+
+    public function eachQuery(QueryInterface $query, \Closure $callback)
+    {
+        $page = 1;
+        $size = $this->iterator_batch_size;
+
+        $dbq = $this->buildDbQuery($query->getFilter())->take($size);
+
+        do {
+            $dbq->skip($this->calcPageOffset($query, $page, $size));
+            $dbq->take($this->calcPageLimit($query, $page, $size));
             $results = $dbq->get();
-        } else {
-            $results = $dbq->get();
-            $limit = $total = $results->count();
+            $results->each($callback);
+        } while($results->count() > 0);
+    }
+    
+    public function allQuery(QueryInterface $query)
+    {
+        $dbq = $this->buildDbQuery($query->getFilter());
+
+        if ($query->hasOffset()) {
+            $dbq->skip($query->getOffset());
         }
 
-	    $limit = $limit ?: 1;
+        if ($query->hasLimit()) {
+            $dbq->take($query->getLimit());
+        }
 
-        return new LengthAwarePaginator($results, $total, $limit, $page);
+        return $dbq->get();
     }
     
-    public function queryFirst(QueryInterface $query)
+    public function getQuery(QueryInterface $query, $id = null)
     {
-        return $this->buildDbQuery($query->getFilter())
-            ->take(1)
-            ->get()
-            ->first();
+        $dbq = $this->buildDbQuery($query->getFilter());
+        
+        if ($query->hasOffset()) {
+            $dbq->skip($query->getOffset());
+        }
+
+        if ($query->hasLimit()) {
+            $dbq->take($query->getLimit());
+        } else {
+            $dbq->take(1);
+        }
+        
+        $model = $dbq->where($this->id_key, $id)->get()->first();
+
+        if (is_null($model)) {
+            throw new NotFoundException();
+        }
+        
+        return $model;
     }
-    
+
     protected function newDbQuery(): Builder
     {
         $model_class = $this->model();

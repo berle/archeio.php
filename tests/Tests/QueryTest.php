@@ -74,16 +74,16 @@ class QueryTest extends TestCase
         $this->query->all();
     }
     
-    public function testIterateQuery()
+    public function testEachQuery()
     {
         $callback = function () {};
         
         $this->source
             ->expects($this->once())
-            ->method('iterateQuery')
+            ->method('eachQuery')
             ->with($this->identicalTo($this->query), $this->identicalTo($callback));
 
-        $this->query->iterate($callback);
+        $this->query->each($callback);
     }
 
     public function testGetQuery()
