@@ -76,30 +76,18 @@ abstract class EloquentSource extends AbstractSource
 
     public function eachQuery(QueryInterface $query, \Closure $callback): void
     {
-        $page = 1;
-        $size = $this->iterator_batch_size;
-
         $dbq = $this->buildDbQuery($query->getFilters());
+        
+        $this->applyOffsetFilter($query, $dbq);
 
-        do {
-            $dbq->skip($this->calcPageOffset($query, $page, $size));
-            $dbq->take($this->calcPageLimit($query, $page, $size));
-            $results = $dbq->get();
-            $results->each($callback);
-        } while($results->count() > 0);
+        $dbq->each($callback, $this->iterator_batch_size);
     }
     
     public function allQuery(QueryInterface $query): CollectionInterface
     {
         $dbq = $this->buildDbQuery($query->getFilters());
-
-        if ($query->hasOffset()) {
-            $dbq->skip($query->getOffset());
-        }
-
-        if ($query->hasLimit()) {
-            $dbq->take($query->getLimit());
-        }
+        
+        $this->applyOffsetLimit($query, $dbq);
 
         return $this->collection($dbq->get()->all());
     }
@@ -108,13 +96,7 @@ abstract class EloquentSource extends AbstractSource
     {
         $dbq = $this->buildDbQuery($query->getFilters());
 
-        if ($query->hasOffset()) {
-            $dbq->skip($query->getOffset());
-        }
-
-        if ($query->hasLimit()) {
-            $dbq->take($query->getLimit());
-        }
+        $this->applyOffsetLimit($query, $dbq);
 
         return $dbq->count();
     }
@@ -123,23 +105,26 @@ abstract class EloquentSource extends AbstractSource
     {
         $dbq = $this->buildDbQuery($query->getFilters());
         
+        $this->applyOffsetLimit($query, $dbq, 1);
+
+        $model = $dbq->where($this->id_key, $id)->get()->first();
+
+        return $model;
+    }
+    
+    protected function applyOffsetLimit(QueryInterface $query, Builder $dbq, ?int $limit = null)
+    {
         if ($query->hasOffset()) {
             $dbq->skip($query->getOffset());
         }
-
+        
         if ($query->hasLimit()) {
             $dbq->take($query->getLimit());
-        } else {
-            $dbq->take(1);
+        } elseif (! is_null($limit)) {
+            $dbq->take($limit);
         }
         
-        $model = $dbq->where($this->id_key, $id)->get()->first();
-
-        if (is_null($model)) {
-            throw new NotFoundException();
-        }
-        
-        return $model;
+        return $dbq;
     }
 
     protected function newDbQuery(): Builder
