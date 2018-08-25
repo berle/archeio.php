@@ -5,10 +5,9 @@ namespace Berle\Archeio;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-abstract class EloquentSource implements SourceInterface
+abstract class EloquentSource extends AbstractSource
 {
 
-    protected $dependencies = [];
     protected $filter = [];
     protected $id_key = 'id';
     protected $searchable = [
@@ -37,11 +36,6 @@ abstract class EloquentSource implements SourceInterface
         }
     }
     
-    public function dependencies(): array
-    {
-        return $this->dependencies;
-    }
-
     public function pageQuery(QueryInterface $query, int $page, int $size): array
     {
         $dbq = $this->buildDbQuery($query->getFilters());
@@ -49,7 +43,7 @@ abstract class EloquentSource implements SourceInterface
         $dbq->take($this->calcPageLimit($query, $page, $size));
         $dbq->skip($this->calcPageOffset($query, $page, $size));
         
-        return $dbq->get()->all();
+        return $this->collection($dbq->get()->all());
     }
     
     protected function calcPageOffset(QueryInterface $query, int $page, int $size): int
@@ -95,7 +89,7 @@ abstract class EloquentSource implements SourceInterface
         } while($results->count() > 0);
     }
     
-    public function allQuery(QueryInterface $query): array
+    public function allQuery(QueryInterface $query): CollectionInterface
     {
         $dbq = $this->buildDbQuery($query->getFilters());
 
@@ -107,7 +101,7 @@ abstract class EloquentSource implements SourceInterface
             $dbq->take($query->getLimit());
         }
 
-        return $dbq->get()->all();
+        return $this->collection($dbq->get()->all());
     }
     
     public function countQuery(QueryInterface $query): int

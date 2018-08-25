@@ -20,9 +20,9 @@ interface QueryInterface
     public function hasLimit(): bool;
     public function getLimit(): int;
     
-    public function page(int $page, int $size): array;
+    public function page(int $page, int $size): CollectionInterface;
     public function each(\Closure $callback): void;
-    public function all(): array;
+    public function all(): CollectionInterface;
     public function count(): int;
     public function get($id);
 

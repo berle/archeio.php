@@ -96,7 +96,7 @@ class Query implements QueryInterface
         return $this->limit ?: 1;
     }
 
-    public function page(int $page, int $size): array
+    public function page(int $page, int $size): CollectionInterface
     {
         return $this->getSource()->pageQuery($this, $page, $size);
     }
@@ -106,7 +106,7 @@ class Query implements QueryInterface
         $this->getSource()->eachQuery($this, $callback);
     }
     
-    public function all(): array
+    public function all(): CollectionInterface
     {
         return $this->getSource()->allQuery($this);
     }
