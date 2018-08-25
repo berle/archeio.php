@@ -44,7 +44,7 @@ abstract class EloquentSource implements SourceInterface
 
     public function pageQuery(QueryInterface $query, int $page, int $size): array
     {
-        $dbq = $this->buildDbQuery($query->getFilter());
+        $dbq = $this->buildDbQuery($query->getFilters());
 
         $dbq->take($this->calcPageLimit($query, $page, $size));
         $dbq->skip($this->calcPageOffset($query, $page, $size));
@@ -85,7 +85,7 @@ abstract class EloquentSource implements SourceInterface
         $page = 1;
         $size = $this->iterator_batch_size;
 
-        $dbq = $this->buildDbQuery($query->getFilter())->take($size);
+        $dbq = $this->buildDbQuery($query->getFilters());
 
         do {
             $dbq->skip($this->calcPageOffset($query, $page, $size));
@@ -97,7 +97,7 @@ abstract class EloquentSource implements SourceInterface
     
     public function allQuery(QueryInterface $query): array
     {
-        $dbq = $this->buildDbQuery($query->getFilter());
+        $dbq = $this->buildDbQuery($query->getFilters());
 
         if ($query->hasOffset()) {
             $dbq->skip($query->getOffset());
@@ -112,7 +112,7 @@ abstract class EloquentSource implements SourceInterface
     
     public function countQuery(QueryInterface $query): int
     {
-        $dbq = $this->buildDbQuery($query->getFilter());
+        $dbq = $this->buildDbQuery($query->getFilters());
 
         if ($query->hasOffset()) {
             $dbq->skip($query->getOffset());
@@ -127,7 +127,7 @@ abstract class EloquentSource implements SourceInterface
     
     public function getQuery(QueryInterface $query, $id = null)
     {
-        $dbq = $this->buildDbQuery($query->getFilter());
+        $dbq = $this->buildDbQuery($query->getFilters());
         
         if ($query->hasOffset()) {
             $dbq->skip($query->getOffset());
