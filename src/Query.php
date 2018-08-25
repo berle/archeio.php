@@ -96,19 +96,24 @@ class Query implements QueryInterface
         return $this->limit ?: 1;
     }
 
-    public function page(int $page, int $size)
+    public function page(int $page, int $size): array
     {
         return $this->getSource()->pageQuery($this, $page, $size);
     }
     
-    public function each(\Closure $callback)
+    public function each(\Closure $callback): void
     {
-        return $this->getSource()->eachQuery($this, $callback);
+        $this->getSource()->eachQuery($this, $callback);
     }
     
-    public function all()
+    public function all(): array
     {
         return $this->getSource()->allQuery($this);
+    }
+    
+    public function count(): int
+    {
+        return $this->getSource()->countQuery($this);
     }
     
     public function get($id)

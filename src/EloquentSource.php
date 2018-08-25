@@ -4,12 +4,10 @@ namespace Berle\Archeio;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 abstract class EloquentSource implements SourceInterface
 {
-    use QueryDispatchTrait;
-    
+
     protected $dependencies = [];
     protected $filter = [];
     protected $id_key = 'id';
@@ -44,16 +42,14 @@ abstract class EloquentSource implements SourceInterface
         return $this->dependencies;
     }
 
-    public function pageQuery(QueryInterface $query, int $page, int $size)
+    public function pageQuery(QueryInterface $query, int $page, int $size): array
     {
         $dbq = $this->buildDbQuery($query->getFilter());
 
-        $total = $dbq->count();
         $dbq->take($this->calcPageLimit($query, $page, $size));
         $dbq->skip($this->calcPageOffset($query, $page, $size));
-        $results = $dbq->get();
-
-        return new LengthAwarePaginator($results, $total, $size, $page);
+        
+        return $dbq->get()->all();
     }
     
     protected function calcPageOffset(QueryInterface $query, int $page, int $size): int
@@ -84,7 +80,7 @@ abstract class EloquentSource implements SourceInterface
         return $size;
     }
 
-    public function eachQuery(QueryInterface $query, \Closure $callback)
+    public function eachQuery(QueryInterface $query, \Closure $callback): void
     {
         $page = 1;
         $size = $this->iterator_batch_size;
@@ -99,7 +95,7 @@ abstract class EloquentSource implements SourceInterface
         } while($results->count() > 0);
     }
     
-    public function allQuery(QueryInterface $query)
+    public function allQuery(QueryInterface $query): array
     {
         $dbq = $this->buildDbQuery($query->getFilter());
 
@@ -111,7 +107,22 @@ abstract class EloquentSource implements SourceInterface
             $dbq->take($query->getLimit());
         }
 
-        return $dbq->get();
+        return $dbq->get()->all();
+    }
+    
+    public function countQuery(QueryInterface $query): int
+    {
+        $dbq = $this->buildDbQuery($query->getFilter());
+
+        if ($query->hasOffset()) {
+            $dbq->skip($query->getOffset());
+        }
+
+        if ($query->hasLimit()) {
+            $dbq->take($query->getLimit());
+        }
+
+        return $dbq->count();
     }
     
     public function getQuery(QueryInterface $query, $id = null)
