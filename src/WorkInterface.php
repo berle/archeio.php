@@ -9,6 +9,7 @@ interface WorkInterface
 
     public function store($resource): WorkInterface;
     public function remove($resource): WorkInterface;
+    public function autoflush(int $every): WorkInterface;
     public function flush(): int;
     public function empty(): int;
     

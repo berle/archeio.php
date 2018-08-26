@@ -116,6 +116,11 @@ class Query implements QueryInterface
         return $this->getSource()->countQuery($this);
     }
     
+    public function first()
+    {
+        return $this->getSource()->firstQuery($this);
+    }
+    
     public function get($id)
     {
         return $this->getSource()->getQuery($this, $id);

@@ -38,107 +38,67 @@ abstract class EloquentSource extends AbstractSource
     
     public function pageQuery(QueryInterface $query, int $page, int $size): CollectionInterface
     {
-        $dbq = $this->buildDbQuery($query->getFilters());
+        $dbq = $this->dbqFromQuery($query)
+            ->skip(($page - 1) * $size)
+            ->take($size);
 
-        $dbq->take($this->calcPageLimit($query, $page, $size));
-        $dbq->skip($this->calcPageOffset($query, $page, $size));
-        
         return $this->collection($dbq->get()->all());
-    }
-    
-    protected function calcPageOffset(QueryInterface $query, int $page, int $size): int
-    {
-        return $query->getOffset() + (($page - 1) * $size);
-    }
-    
-    protected function calcPageLimit(QueryInterface $query, int $page, int $size): int
-    {
-        if (! $query->hasLimit()) {
-            // We have no limit, therefor we can always use the full pagesize as limit.
-            return $size;
-        }
-        
-        $last_offset = $query->getOffset() + $query->getLimit();
-        $page_offset = $this->calcPageOffset($query, $page, $size);
-        
-        if (($page_offset + $size) > $last_offset) {
-            $new_size = $last_offset - $page_offset;
-            
-            if ($new_size > 0) {
-                return $new_size;
-            } else {
-                return 0;
-            }
-        }
-        
-        return $size;
     }
 
     public function eachQuery(QueryInterface $query, \Closure $callback): void
     {
-        $dbq = $this->buildDbQuery($query->getFilters());
+        $dbq = $this->dbqFromQuery($query);
         
-        $this->applyOffsetFilter($query, $dbq);
-
         $dbq->each($callback, $this->iterator_batch_size);
     }
     
     public function allQuery(QueryInterface $query): CollectionInterface
     {
-        $dbq = $this->buildDbQuery($query->getFilters());
-        
-        $this->applyOffsetLimit($query, $dbq);
+        $dbq = $this->dbqFromQuery($query);
 
         return $this->collection($dbq->get()->all());
     }
     
     public function countQuery(QueryInterface $query): int
     {
-        $dbq = $this->buildDbQuery($query->getFilters());
-
-        $this->applyOffsetLimit($query, $dbq);
-
-        return $dbq->count();
+        return $this->dbqFromQuery($query)
+            ->count();
+    }
+    
+    public function firstQuery(QueryInterface $query)
+    {
+        return $this->dbqFromQuery($query)
+            ->take(1)
+            ->get()
+            ->first();
     }
     
     public function getQuery(QueryInterface $query, $id = null)
     {
-        $dbq = $this->buildDbQuery($query->getFilters());
-        
-        $this->applyOffsetLimit($query, $dbq, 1);
-
-        $model = $dbq->where($this->id_key, $id)->get()->first();
-
-        return $model;
-    }
-    
-    protected function applyOffsetLimit(QueryInterface $query, Builder $dbq, ?int $limit = null)
-    {
-        if ($query->hasOffset()) {
-            $dbq->skip($query->getOffset());
-        }
-        
-        if ($query->hasLimit()) {
-            $dbq->take($query->getLimit());
-        } elseif (! is_null($limit)) {
-            $dbq->take($limit);
-        }
-        
-        return $dbq;
+        return $this->dbqFromQuery($query)
+            ->where($this->id_key, $id)
+            ->take(1)
+            ->get()
+            ->first();
     }
 
-    protected function newDbQuery(): Builder
+    protected function newDbq(): Builder
     {
         $model_class = $this->model();
         
         return (new $model_class)->newQuery();
     }
     
-    protected function buildDbQuery(array $filter = []): Builder
+    protected function dbqFromQuery(QueryInterface $query): Builder
     {
-        $dbq = $this->newDbQuery();
+        return $this->buildDbQuery($query->getFilters());
+    }
+    
+    protected function buildDbQuery(array $filter): Builder
+    {
+        $dbq = $this->newDbq();
 
-        $filter = array_merge($this->filter, $filter);
+        $filter = array_merge($filter, $this->filter);
 
         foreach ($filter as $key => $value) {
             if ($spec = $this->getSearchable($key)) {

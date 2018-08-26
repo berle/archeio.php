@@ -31,6 +31,11 @@ abstract class AbstractSource implements SourceInterface
         $this->allQuery($query)->each($callback);
     }
     
+    public function firstQuery(QueryInterface $query)
+    {
+        return $this->allQuery($query)->first();
+    }
+    
     public function countQuery(QueryInterface $query): int
     {
         return $this->allQuery($query)->count();

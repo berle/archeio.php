@@ -8,6 +8,7 @@ class Work implements WorkInterface
     protected $stored = [];
     protected $removed = [];
     protected $count = 0;
+    protected $autoflush = null;
 
     public function __construct(
         RepositoryInterface $repository
@@ -22,6 +23,8 @@ class Work implements WorkInterface
         $this->stored[ $type ][] = $resource;
         $this->count++;
         
+        $this->checkAutoflush();
+        
         return $this;
     }
     
@@ -31,7 +34,9 @@ class Work implements WorkInterface
         
         $this->removed[ $type ][] = $resource;
         $this->count++;
-        
+
+        $this->checkAutoflush();
+
         return $this;
     }
     
@@ -56,6 +61,22 @@ class Work implements WorkInterface
         $this->repository->flush($this);
         
         return $count;
+    }
+    
+    public function autoflush(int $every): WorkInterface
+    {
+        $this->autoflush = $every;
+        
+        return $this;
+    }
+    
+    protected function checkAutoflush(): void
+    {
+        if (isset($this->autoflush)) {
+            if ($this->count >= $this->autoflush) {
+                $this->flush();
+            }
+        }
     }
     
     protected function assertValidResource($resource): string
