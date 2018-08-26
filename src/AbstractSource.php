@@ -41,7 +41,7 @@ abstract class AbstractSource implements SourceInterface
         return $this->allQuery($query)->count();
     }
 
-    protected function collection(array $items): CollectionInterface
+    protected function collection(array $items = []): CollectionInterface
     {
         return new Collection($items);
     }
