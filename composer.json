@@ -1,5 +1,6 @@
 {
     "name": "berle/archeio",
+    "version": "0.0.1",
     "description": "Ardcheio Repository Framework for PHP",
     "type": "library",
     "license": "MIT",
